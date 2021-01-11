@@ -31,6 +31,13 @@ function focus__before() {
 
 function focus__done() {
   local current_branch="$(focus__now)"
+  
+  if [[ "${current_branch}" == 'nothing' ]]
+  then
+    echo "nothing is done"
+    return
+  fi
+
   __git switch "done"
   __git merge --no-ff --no-edit "$current_branch"
   __git branch -D "${current_branch}"
