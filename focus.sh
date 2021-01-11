@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-[ "$DEBUG" == "1" ] && set -x
+set -euo pipefail
+
+[ "${DEBUG:-0}" == "1" ] && set -x
 
 FOCUS_TRACKING_REPO=${FOCUS_TRACKING_REPO:-$HOME/work/focus.sh-tracking}
 
