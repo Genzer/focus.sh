@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-[ "$DEBUG" == "1" ] && set -x
+set -euo pipefail
+
+[ "${DEBUG:-0}" == "1" ] && set -x
 
 FOCUS_TRACKING_REPO=${FOCUS_TRACKING_REPO:-$HOME/work/focus.sh-tracking}
 
@@ -10,8 +12,9 @@ function focus__version() {
 
 function focus__init() {
   mkdir -p ${FOCUS_TRACKING_REPO}
-  __git init
-  __git switch -c "nothing"
+  __git init --initial-branch=nothing
+  __git commit --allow-empty -m 'Empty'
+  __git branch -c "done"
 }
 
 function __git() {
@@ -28,6 +31,13 @@ function focus__before() {
 
 function focus__done() {
   local current_branch="$(focus__now)"
+  
+  if [[ "${current_branch}" == 'nothing' ]]
+  then
+    echo "nothing is done"
+    return
+  fi
+
   __git switch "done"
   __git merge --no-ff --no-edit "$current_branch"
   __git branch -D "${current_branch}"
@@ -48,26 +58,48 @@ function focus__jot() {
 function focus__to() {
   local new_topic="${*}"
   new_topic=${new_topic// /-}
+ 
+  # This is important as it won't polute the branch /nothing
+  # with too many commits.
+  # Previous versions (<= 0.3.0) produced a very long history
+  # for any new branch.
+  local current_branch="$(focus__now)"
+  if [[ "${current_branch}" != 'nothing' ]]
+  then
+    focus__jot -m "Switch to [${new_topic}]"
+  fi
   
-  focus__jot -m "Switch to [${new_topic}]"
-
-  $(__git show-ref --quiet --verify -- "refs/heads/${new_topic}")
-  if [ "$?" == "0" ]
+  # See https://superuser.com/a/940542/627807.
+  # Bash allows to test a command and use the exit code for the `if`
+  # statement and bypassing the set -e.
+  if __git show-ref --quiet --verify -- "refs/heads/${new_topic}"
   then
     __git switch "${new_topic}"
   else
-    __git switch -c "${new_topic}" "nothing"
+    __git switch -c "${new_topic}" 'nothing'
     focus__jot -m "Started on ${new_topic}"
   fi
 
   local hook="${FOCUS_TO__HOOK:-$HOME/.focus/hooks/focus_to.sh}"
   [ -f ${hook} ] && ${hook} "${new_topic}"
 
-  echo "previous topic $(focus__before)"
+  if focus__before
+  then
+    echo "previous topic $(focus__before)"
+  else
+    echo "previous topic: nothing"
+  fi
 }
 
 function focus__ls() {
-  __git ls
+  __git log --pretty=format:'%C(green)%h %C(yellow)[%ad] %Creset%s' --decorate --date=relative
+}
+
+function focus__stop() {
+  focus__to 'nothing'
+  local hook="${FOCUS_STOP__HOOK:-$HOME/.focus/hooks/focus_stop.sh}"
+  [ -f ${hook} ] && ${hook}
+
 }
 
 function usage() {
@@ -82,9 +114,15 @@ The following commands can be used:
 
   to SUMMARY_OF_TOPIC
     Switch the current focus to another topic.
+    Hook is supported.
+
+  stop
+    Stop the current focus. Switch back to 'nothing'.
+    Hook is supported.
 
   done
     Mark the current topic as done.
+    Hook is supported.
 
   all
     List all (undone) active focuses.
@@ -153,6 +191,9 @@ case "$option" in
     ;;
   version)
     focus__version
+    ;;
+  stop)
+    focus__stop
     ;;
   *)
     usage
