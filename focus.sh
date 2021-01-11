@@ -5,7 +5,7 @@
 FOCUS_TRACKING_REPO=${FOCUS_TRACKING_REPO:-$HOME/work/focus.sh-tracking}
 
 function focus__version() {
-  echo "0.1.0"
+  echo "0.2.0"
 }
 
 function focus__init() {
