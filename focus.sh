@@ -92,7 +92,7 @@ function focus__to() {
 }
 
 function focus__ls() {
-  __git ls
+  __git log --pretty=format:'%C(green)%h %C(yellow)[%ad] %Creset%s' --decorate --date=relative
 }
 
 function focus__stop() {
