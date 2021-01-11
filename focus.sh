@@ -12,8 +12,9 @@ function focus__version() {
 
 function focus__init() {
   mkdir -p ${FOCUS_TRACKING_REPO}
-  __git init
-  __git switch -c "nothing"
+  __git init --initial-branch=nothing
+  __git commit --allow-empty -m 'Empty'
+  __git branch -c "done"
 }
 
 function __git() {
