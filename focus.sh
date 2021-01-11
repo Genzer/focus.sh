@@ -95,6 +95,13 @@ function focus__ls() {
   __git ls
 }
 
+function focus__stop() {
+  focus__to 'nothing'
+  local hook="${FOCUS_STOP__HOOK:-$HOME/.focus/hooks/focus_stop.sh}"
+  [ -f ${hook} ] && ${hook}
+
+}
+
 function usage() {
   cat <<__USAGE__
 The following commands can be used:
@@ -107,9 +114,15 @@ The following commands can be used:
 
   to SUMMARY_OF_TOPIC
     Switch the current focus to another topic.
+    Hook is supported.
+
+  stop
+    Stop the current focus. Switch back to 'nothing'.
+    Hook is supported.
 
   done
     Mark the current topic as done.
+    Hook is supported.
 
   all
     List all (undone) active focuses.
@@ -178,6 +191,9 @@ case "$option" in
     ;;
   version)
     focus__version
+    ;;
+  stop)
+    focus__stop
     ;;
   *)
     usage
