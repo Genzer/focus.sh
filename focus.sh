@@ -5,7 +5,7 @@
 FOCUS_TRACKING_REPO=${FOCUS_TRACKING_REPO:-$HOME/work/focus.sh-tracking}
 
 function focus__version() {
-  echo "0.1.0"
+  echo "0.2.0"
 }
 
 function focus__init() {
@@ -32,6 +32,8 @@ function focus__done() {
   __git merge --no-ff --no-edit "$current_branch"
   __git branch -D "${current_branch}"
   __git switch "nothing"
+  local hook="${FOCUS_DONE__HOOK:-$HOME/.focus/hooks/focus_done.sh}"
+  [ -f ${hook} ] && ${hook}
 }
 
 function focus__all() {
@@ -57,6 +59,9 @@ function focus__to() {
     __git switch -c "${new_topic}" "nothing"
     focus__jot -m "Started on ${new_topic}"
   fi
+
+  local hook="${FOCUS_TO__HOOK:-$HOME/.focus/hooks/focus_to.sh}"
+  [ -f ${hook} ] && ${hook} "${new_topic}"
 
   echo "previous topic $(focus__before)"
 }

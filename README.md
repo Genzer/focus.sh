@@ -104,3 +104,15 @@ The following commands can be used:
   help
     Show this usage.
 ```
+
+## Hooks 
+
+_since 0.2.0_
+
+`focus.sh` supports hooks (like Git hooks) which will be called upon some commands get done. The commands at the moment support hooks are:
+
+- `focus to`: the hook defined by an environment variable `FOCUS_TO__HOOK` or default to `$HOME/.focus/hooks/focus_to.sh`.
+- `focus done`: the hook defined by an environment variable `FOCUS_DONE__HOOK` or default to `$HOME/.focus/hooks/focus_done.sh`.
+
+A hook is an executable (a script file or a binary file) which, this is important, that the current user is granted execute permission (e.g `chmod u+x`).
+The hook will be called with exactly the parameters passed in from the original `focus.sh` command.
