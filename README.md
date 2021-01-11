@@ -60,7 +60,7 @@ The following steps can be used to install
 ```bash
 $ git clone git@github.com:Genzer/focus.sh.git ~/.local/bin/focus.sh
 
-$ echo '$HOME/.local/bin/focus.sh/' >>~/.bashrc 
+$ echo alias='$HOME/.local/bin/focus.sh' >>~/.bashrc 
 
 # Create an empty Git at $FOCUS_TRACKING_REPO. Default to $HOME/work/focus.sh-tracking
 $ focus init
