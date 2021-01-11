@@ -58,22 +58,37 @@ function focus__jot() {
 function focus__to() {
   local new_topic="${*}"
   new_topic=${new_topic// /-}
+ 
+  # This is important as it won't polute the branch /nothing
+  # with too many commits.
+  # Previous versions (<= 0.3.0) produced a very long history
+  # for any new branch.
+  local current_branch="$(focus__now)"
+  if [[ "${current_branch}" != 'nothing' ]]
+  then
+    focus__jot -m "Switch to [${new_topic}]"
+  fi
   
-  focus__jot -m "Switch to [${new_topic}]"
-
-  $(__git show-ref --quiet --verify -- "refs/heads/${new_topic}")
-  if [ "$?" == "0" ]
+  # See https://superuser.com/a/940542/627807.
+  # Bash allows to test a command and use the exit code for the `if`
+  # statement and bypassing the set -e.
+  if __git show-ref --quiet --verify -- "refs/heads/${new_topic}"
   then
     __git switch "${new_topic}"
   else
-    __git switch -c "${new_topic}" "nothing"
+    __git switch -c "${new_topic}" 'nothing'
     focus__jot -m "Started on ${new_topic}"
   fi
 
   local hook="${FOCUS_TO__HOOK:-$HOME/.focus/hooks/focus_to.sh}"
   [ -f ${hook} ] && ${hook} "${new_topic}"
 
-  echo "previous topic $(focus__before)"
+  if focus__before
+  then
+    echo "previous topic $(focus__before)"
+  else
+    echo "previous topic: nothing"
+  fi
 }
 
 function focus__ls() {
