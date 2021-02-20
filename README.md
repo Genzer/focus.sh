@@ -29,7 +29,7 @@ nothing
 $ focus to work/some-thing
 
 # I update with some steps that got finished.
-$ focus jot 'Some findings that I find"
+$ focus jot 'Some findings that I find'
 
 # Or if I need a long text, I can use the default Git EDITOR (vim ftw).
 $ focus jot
@@ -60,7 +60,10 @@ The following steps can be used to install
 ```bash
 $ git clone git@github.com:Genzer/focus.sh.git ~/.local/bin/focus.sh
 
-$ echo alias='$HOME/.local/bin/focus.sh' >>~/.bashrc 
+# Replace ~/.bashrc to ~/.zshrc if you are using Zsh.
+$ echo alias focus='$HOME/.local/bin/focus.sh/focus.sh' >>~/.bashrc 
+
+# Reopen your shell.
 
 # Create an empty Git at $FOCUS_TRACKING_REPO. Default to $HOME/work/focus.sh-tracking
 $ focus init
