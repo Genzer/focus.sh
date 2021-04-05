@@ -30,7 +30,13 @@ function focus__before() {
 }
 
 function focus__done() {
+  local targetted_focus="${1:-nothing}"
   local current_branch="$(focus__now)"
+
+  if [ ! "$targetted_focus" == 'nothing' ]
+  then
+    current_branch="${targetted_focus}"
+  fi
   
   if [[ "${current_branch}" == 'nothing' ]]
   then
@@ -167,7 +173,7 @@ case "$option" in
     focus__to "$@"
     ;;
   done)
-    focus__done
+    focus__done "$@"
     ;;
   jot)
     if [ "$#" == "0" ]
