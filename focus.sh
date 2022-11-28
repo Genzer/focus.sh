@@ -4,10 +4,12 @@ set -euo pipefail
 
 [ "${DEBUG:-0}" == "1" ] && set -x
 
-FOCUS_TRACKING_REPO=${FOCUS_TRACKING_REPO:-$HOME/work/focus.sh-tracking}
+DEFAULT_DATA_DIR="${XDG_DATA_HOME/focus.sh:-$HOME/.local/share/focus.sh}"
+DEFAULT_CONFIG_DIR="${XDG_CONFIG_HOME/focus.sh:-$HOME/.config/focus.sh}"
+FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_DATA_DIR}"
 
 function focus__version() {
-  echo "0.3.0"
+  echo "0.4.0"
 }
 
 function focus__init() {
@@ -42,7 +44,7 @@ function focus__done() {
   __git merge --no-ff --no-edit "$current_branch"
   __git branch -D "${current_branch}"
   __git switch "nothing"
-  local hook="${FOCUS_DONE__HOOK:-$HOME/.focus/hooks/focus_done.sh}"
+  local hook="${FOCUS_DONE__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_done.sh}"
   [ -f ${hook} ] && ${hook}
 }
 
@@ -80,7 +82,7 @@ function focus__to() {
     focus__jot -m "Started on ${new_topic}"
   fi
 
-  local hook="${FOCUS_TO__HOOK:-$HOME/.focus/hooks/focus_to.sh}"
+  local hook="${FOCUS_TO__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_to.sh}"
   [ -f ${hook} ] && ${hook} "${new_topic}"
 
   if focus__before
@@ -97,7 +99,7 @@ function focus__ls() {
 
 function focus__stop() {
   focus__to 'nothing'
-  local hook="${FOCUS_STOP__HOOK:-$HOME/.focus/hooks/focus_stop.sh}"
+  local hook="${FOCUS_STOP__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_stop.sh}"
   [ -f ${hook} ] && ${hook}
 
 }

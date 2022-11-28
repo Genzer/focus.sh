@@ -55,6 +55,7 @@ $ focus work/some-thing
 ```
 ## Install
 
+
 The following steps can be used to install
 
 ```bash
@@ -65,9 +66,16 @@ $ echo alias focus='$HOME/.local/bin/focus.sh/focus.sh' >>~/.bashrc
 
 # Reopen your shell.
 
-# Create an empty Git at $FOCUS_TRACKING_REPO. Default to $HOME/work/focus.sh-tracking
+# Create an empty Git at $FOCUS_TRACKING_REPO. If it is not set, it uses `$XDG_DATA_HOME/focus.sh`. Default to $HOME/.local/share/focus.sh.
 $ focus init
 ```
+
+## Support for XDG Base Directory Specification
+
+_@since: 0.4.0_
+
+- The Git repository used internally is default to `$XDG_DATA_HOME/focus.sh`.
+- Hooks' default location are moved to `$XDG_CONFIG_HOME/focus.sh`.
 
 ## Commands
 
@@ -110,16 +118,16 @@ The following commands can be used:
 
 ## Hooks 
 
-_since 0.2.0_
+_@since 0.2.0_
 
 A hook is an executable (a script file or a binary file) which, this is important, that the current user is granted execute permission (e.g `chmod u+x`).
 The hook will be called with exactly the parameters passed in from the original `focus.sh` command.
 
 `focus.sh` supports hooks (like Git hooks) which will be called upon some commands get done. The commands at the moment support hooks are:
 
-| Command      | Environment Variable | Default                            |
-| ------------ | -------------------- | ---------------------------------- |
-| `focus to`   | `FOCUS_TO__HOOK`     | `$HOME/.focus/hooks/focus_to.sh`   |
-| `focus done` | `FOCUS_DONE__HOOK`   | `$HOME/.focus/hooks/focus_done.sh` |
-| `focus stop` | `FOCUS_STOP__HOOK`   | `$HOME/.focus/hooks/focus_stop.sh` |
+| Command      | Environment Variable | Default                                      |
+| ------------ | -------------------- | -------------------------------------------- |
+| `focus to`   | `FOCUS_TO__HOOK`     | `$HOME/.config/focus.sh/hooks/focus_to.sh`   |
+| `focus done` | `FOCUS_DONE__HOOK`   | `$HOME/.config/focus.sh/hooks/focus_done.sh` |
+| `focus stop` | `FOCUS_STOP__HOOK`   | `$HOME/.config/focus.sh/hooks/focus_stop.sh` |
 
