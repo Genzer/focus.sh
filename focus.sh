@@ -4,12 +4,19 @@ set -euo pipefail
 
 [ "${DEBUG:-0}" == "1" ] && set -x
 
-DEFAULT_DATA_DIR="${XDG_DATA_HOME/focus.sh:-$HOME/.local/share/focus.sh}"
-DEFAULT_CONFIG_DIR="${XDG_CONFIG_HOME/focus.sh:-$HOME/.config/focus.sh}"
-FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_DATA_DIR}"
+# These follows XDG Base Directory Specification
+DEFAULT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share/}"
+DEFAULT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
+DEFAULT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-function focus__version() {
-  echo "0.4.0"
+# Tracking means storing the history of switching focuses.
+FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_DATA_DIR}/focus.sh/"
+
+# Store the files generating during focusing.
+FOCUS_DATA_DIR="${FOCUS_DATA_DIR:-$DEFAULT_DATA_DIR/focus.sh}"
+
+focus__version() {
+  echo "0.5.0-dev"
 }
 
 function focus__init() {
