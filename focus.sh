@@ -19,26 +19,26 @@ focus__version() {
   echo "0.5.0-dev"
 }
 
-function focus__init() {
+focus__init() {
   mkdir -p ${FOCUS_TRACKING_REPO}
   __git init --initial-branch=nothing
   __git commit --allow-empty -m 'Empty'
   __git branch -c "done"
 }
 
-function __git() {
-  git -C "$FOCUS_TRACKING_REPO" "$@"
+__git() {
+  git -C "$FOCUS_TRACKING_REPO" "$@" >&2
 }
 
-function focus__now() {
-  __git branch --show-current
+focus__now() {
+  __git branch --show-current 2>&1
 }
 
-function focus__before() {
-  __git rev-parse --abbrev-ref "@{-${1:-1}}"
+focus__before() {
+  __git rev-parse --abbrev-ref "@{-${1:-1}}" 2>&1
 }
 
-function focus__done() {
+focus__done() {
   local current_branch="$(focus__now)"
   
   if [[ "${current_branch}" == 'nothing' ]]
@@ -55,16 +55,16 @@ function focus__done() {
   [ -f ${hook} ] && ${hook}
 }
 
-function focus__all() {
+focus__all() {
   __git branch --all
 }
 
 # Add an update/message/note into the current focus.
-function focus__jot() {
-  __git commit --allow-empty "$@"
+focus__jot() {
+  __git commit --allow-empty "$@" >&2
 }
 
-function focus__to() {
+focus__to_track() {
   local new_topic="${*}"
   new_topic=${new_topic// /-}
  
@@ -81,37 +81,69 @@ function focus__to() {
   # See https://superuser.com/a/940542/627807.
   # Bash allows to test a command and use the exit code for the `if`
   # statement and bypassing the set -e.
-  if __git show-ref --quiet --verify -- "refs/heads/${new_topic}"
+  if __git show-ref --quiet --verify -- "refs/heads/${new_topic}" >/dev/null
   then
-    __git switch "${new_topic}"
+    __git switch "${new_topic}" 2>/dev/null 
   else
-    __git switch -c "${new_topic}" 'nothing'
-    focus__jot -m "Started on ${new_topic}"
+    __git switch -c "${new_topic}" 'nothing' 2>/dev/null
+    focus__jot -m "Started on ${new_topic}" 
   fi
 
   local hook="${FOCUS_TO__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_to.sh}"
-  [ -f ${hook} ] && ${hook} "${new_topic}"
+  [ -f ${hook} ] && ${hook} "${new_topic}" >&2
 
-  if focus__before
+  if focus__before >/dev/null
   then
-    echo "previous topic $(focus__before)"
+    echo "Previous topic $(focus__before)" >&2
   else
-    echo "previous topic: nothing"
+    echo "Previous topic: nothing" >&2
   fi
 }
 
-function focus__ls() {
-  __git log --pretty=format:'%C(green)%h %C(yellow)[%ad] %Creset%s' --decorate --date=relative
+focus__to() {
+  if [[ "$#" -eq 0 ]]; then
+    cd "$FOCUS_DATA_DIR" && ls -t -d -- */ | fzf
+    return
+  fi
+
+  local new_topic="${*}"
+  new_topic=${new_topic// /-}
+  mkdir -p "$FOCUS_DATA_DIR/$new_topic"
+  focus__to_track "$@" && true
+  echo "$new_topic"
 }
 
-function focus__stop() {
-  focus__to 'nothing'
+focus__history() {
+  __git log --pretty=format:'%C(green)%h %C(yellow)[%ad] %Creset%s' --decorate --date=relative 2>&1
+}
+
+focus__la() {
+  if command -v exa 2>&1 >/dev/null; then
+    exa "$FOCUS_DATA_DIR" --sort=changed  --reverse \
+      --group-directories-first \
+      --long -t=changed --time-style=long-iso \
+      --no-user --no-filesize --no-permissions --color=always
+    return
+  fi
+  ls -ty "$FOCUS_DATA_DIR"
+}
+
+focus__ls() {
+  focus__la | head -5
+}
+
+focus__stop() {
+  focus__to_track 'nothing'
   local hook="${FOCUS_STOP__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_stop.sh}"
   [ -f ${hook} ] && ${hook}
 
 }
 
-function usage() {
+focus__dir() {
+  cd "$FOCUS_DATA_DIR"
+}
+
+usage() {
   cat <<__USAGE__
 The following commands can be used:
 
@@ -143,6 +175,8 @@ The following commands can be used:
     Jot down a quick summary of what has been done.
     The MESSAGE is optional. If it is missing, the default Git commit EDITOR will be opened.
 
+  dir
+    Go to the FOCUS_DATA_DIR
   fix
     Fix the last messsage jotted down.
 
@@ -152,59 +186,71 @@ __USAGE__
 
 }
 
-if [ "$#" == "0" ]
-then
-  usage
-  exit 0
-fi
-
-
-option="${1}"
-shift
-
-case "$option" in
-  init)
-    focus__init
-    ;;
-  now)
-    focus__now
-    ;;
-  before)
-    focus__before "$@"
-    ;;
-  to)
-    focus__to "$@"
-    ;;
-  done)
-    focus__done
-    ;;
-  jot)
-    if [ "$#" == "0" ]
-    then
-      focus__jot
-    else
-      focus__jot -m "$*"
-    fi
-    ;;
-  fix)
-    focus__jot --edit --amend
-    ;;
-  ls)
-    focus__ls
-    ;;
-  all)
-    focus__all
-    ;;
-  help)
+focus__main() {
+  if [ "$#" == "0" ]
+  then
     usage
-    ;;
-  version)
-    focus__version
-    ;;
-  stop)
-    focus__stop
-    ;;
-  *)
-    usage
-    ;;
-esac
+    exit 0
+  fi
+
+  option="${1}"
+  shift
+
+  case "$option" in
+    init)
+      focus__init
+      ;;
+    now)
+      focus__now
+      ;;
+    before)
+      focus__before "$@"
+      ;;
+    to)
+      focus__to "$@"
+      ;;
+    done)
+      focus__done
+      ;;
+    jot)
+      if [ "$#" == "0" ]
+      then
+        focus__jot
+      else
+        focus__jot -m "$*"
+      fi
+      ;;
+    fix)
+      focus__jot --edit --amend
+      ;;
+    log)
+      focus__history 2>&1;;
+    ls)
+      focus__ls;;
+    la)
+      focus__la;;
+    all)
+      focus__all;;
+    help)
+      usage;;
+    version)
+      focus__version;;
+    stop)
+      focus__stop;;
+    dir)
+      echo "$FOCUS_DATA_DIR";;
+    *)
+      usage
+      ;;
+  esac
+}
+
+focus() {
+  if [[ "$1" == "dir" ]]; then
+    cd "$(focus dir)"
+  else
+    "$XDG_BIN_HOME/focus" "$@"
+  fi
+}
+
+focus__main "$@"
