@@ -10,7 +10,7 @@ DEFAULT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
 DEFAULT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # Tracking means storing the history of switching focuses.
-FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_DATA_DIR}/focus.sh/"
+FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_STATE_DIR}/focus.sh/"
 
 # Store the files generating during focusing.
 FOCUS_DATA_DIR="${FOCUS_DATA_DIR:-$DEFAULT_DATA_DIR/focus.sh}"
