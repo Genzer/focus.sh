@@ -84,6 +84,7 @@ focus__to_track() {
   if __git show-ref --quiet --verify -- "refs/heads/${new_topic}" >/dev/null
   then
     __git switch "${new_topic}" 2>/dev/null 
+    focus__jot -m "Switch back to [${new_topic}]"
   else
     __git switch -c "${new_topic}" 'nothing' 2>/dev/null
     focus__jot -m "Started on ${new_topic}" 
@@ -100,9 +101,29 @@ focus__to_track() {
   fi
 }
 
+focus__select() {
+  if command -v fzf >/dev/null; then
+    cd "$FOCUS_DATA_DIR" && ls -t -d -- */ | fzf
+    return 
+  else
+    cd "$FOCUS_DATA_DIR"
+    local options=
+    readarray -t options < <(ls -t -r -d -- */)
+    select dir in "${options[@]}"
+    do
+      echo "$dir"
+      return
+    done
+  fi
+}
+
 focus__to() {
   if [[ "$#" -eq 0 ]]; then
-    cd "$FOCUS_DATA_DIR" && ls -t -d -- */ | fzf
+    local select=
+    # select="$(cd "$FOCUS_DATA_DIR" && ls -t -d -- */ | fzf)"
+    select="$(focus__select)"
+    focus__to_track "${select%/}"
+    echo "$select"
     return
   fi
 
