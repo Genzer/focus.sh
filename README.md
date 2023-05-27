@@ -14,6 +14,11 @@ repository so the `.git` directory is the source of truth.
 - *Focus*: A focus is a Git branch.
 - *Update/Note*: A simple Git commit (with `--allow-empty`).
 
+> @since 0.5.0
+
+Over the time of using `focus.sh`, I developed a practice of using an accompanying directory for each _focus_.This directory contains files, repositories and everything occured during the focus (kinda like _focus jot_ but into real files).
+
+
 ## Workflow
 
 This section describes the typical workflow that I use `focus.sh` as well as some common commands.
