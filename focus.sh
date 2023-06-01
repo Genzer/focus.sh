@@ -51,7 +51,7 @@ focus__done() {
   __git merge --no-ff --no-edit "$current_branch"
   __git branch -D "${current_branch}"
   __git switch "nothing"
-  local hook="${FOCUS_DONE__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_done.sh}"
+  local hook="${FOCUS_DONE__HOOK:-$DEFAULT_CONFIG_DIR/focus.sh/hooks/focus_done.sh}"
   [ -f ${hook} ] && ${hook}
 }
 
@@ -90,7 +90,7 @@ focus__to_track() {
     focus__jot -m "Started on ${new_topic}" 
   fi
 
-  local hook="${FOCUS_TO__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_to.sh}"
+  local hook="${FOCUS_TO__HOOK:-$DEFAULT_CONFIG_DIR/focus.sh/hooks/focus_to.sh}"
   [ -f ${hook} ] && ${hook} "${new_topic}" >&2
 
   if focus__before >/dev/null
@@ -155,7 +155,7 @@ focus__ls() {
 
 focus__stop() {
   focus__to_track 'nothing'
-  local hook="${FOCUS_STOP__HOOK:-$DEFAULT_CONFIG_DIR/hooks/focus_stop.sh}"
+  local hook="${FOCUS_STOP__HOOK:-$DEFAULT_CONFIG_DIR/focus.sh/hooks/focus_stop.sh}"
   [ -f ${hook} ] && ${hook}
 
 }
@@ -205,6 +205,21 @@ The following commands can be used:
     Show this usage.
 __USAGE__
 
+}
+
+focus__export() {
+  cat <<'__FOCUS_EXPORT__'
+function focus {
+  local _focus="$XDG_BIN_HOME/focus"
+  if [[ "$1" == "dir" ]]; then
+    cd "$( $_focus dir )"
+  elif [[ "$1" == "to" ]]; then
+    cd "$( $_focus dir )/$( $_focus $@)"
+  else
+    "$_focus" "$@"
+  fi
+}
+__FOCUS_EXPORT__
 }
 
 focus__main() {
@@ -260,18 +275,12 @@ focus__main() {
       focus__stop;;
     dir)
       echo "$FOCUS_DATA_DIR";;
+    export)
+      focus__export;;
     *)
       usage
       ;;
   esac
-}
-
-focus() {
-  if [[ "$1" == "dir" ]]; then
-    cd "$(focus dir)"
-  else
-    "$XDG_BIN_HOME/focus" "$@"
-  fi
 }
 
 focus__main "$@"
