@@ -47,10 +47,10 @@ focus__done() {
     return
   fi
 
-  __git switch "done"
-  __git merge --no-ff --no-edit "$current_branch"
-  __git branch -D "${current_branch}"
   __git switch "nothing"
+  __git merge --no-ff --no-edit "$current_branch" -m "Stop focusing on ${current_branch}"
+  __git branch -D "${current_branch}"
+  # __git switch "nothing"
   local hook="${FOCUS_DONE__HOOK:-$DEFAULT_CONFIG_DIR/focus.sh/hooks/focus_done.sh}"
   [ -f ${hook} ] && ${hook}
 }
