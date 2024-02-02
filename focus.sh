@@ -117,6 +117,14 @@ focus__select() {
   fi
 }
 
+focus__today() {
+  if [[ "$#" -eq 0 ]]; then
+    echo "Please set your focus today!"
+    exit 1
+  fi
+  focus__to "$(date -u "+%Y-%m-%d--")${*}"
+}
+
 focus__to() {
   if [[ "$#" -eq 0 ]]; then
     local select=
@@ -154,7 +162,8 @@ focus__ls() {
 }
 
 focus__stop() {
-  focus__to_track 'nothing'
+  # focus__to 'nothing'
+  focus__done
   local hook="${FOCUS_STOP__HOOK:-$DEFAULT_CONFIG_DIR/focus.sh/hooks/focus_stop.sh}"
   [ -f ${hook} ] && ${hook}
 
@@ -177,6 +186,9 @@ The following commands can be used:
   to SUMMARY_OF_TOPIC
     Switch the current focus to another topic.
     Hook is supported.
+
+  today SUMMARY_OF_TOPIC
+    Same as "to". Append today (YYYY-MM-DD) to topic.
 
   stop
     Stop the current focus. Switch back to 'nothing'.
@@ -244,6 +256,9 @@ focus__main() {
       ;;
     to)
       focus__to "$@"
+      ;;
+    today)
+      focus__today "$@"
       ;;
     done)
       focus__done
