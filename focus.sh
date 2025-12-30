@@ -16,7 +16,7 @@ FOCUS_TRACKING_REPO="${FOCUS_TRACKING_REPO:-$DEFAULT_STATE_DIR}/focus.sh/"
 FOCUS_DATA_DIR="${FOCUS_DATA_DIR:-$DEFAULT_DATA_DIR/focus.sh}"
 
 focus__version() {
-  echo "0.5.0-dev"
+  echo "0.7.0"
 }
 
 focus__init() {
@@ -117,6 +117,13 @@ focus__select() {
   fi
 }
 
+focus__cd() {
+  local select=
+  select="$(focus__select)"
+  echo "$select"
+  return
+}
+
 focus__today() {
   if [[ "$#" -eq 0 ]]; then
     echo "Please set your focus today!"
@@ -128,7 +135,6 @@ focus__today() {
 focus__to() {
   if [[ "$#" -eq 0 ]]; then
     local select=
-    # select="$(cd "$FOCUS_DATA_DIR" && ls -t -d -- */ | fzf)"
     select="$(focus__select)"
     focus__to_track "${select%/}"
     echo "$select"
@@ -147,8 +153,8 @@ focus__history() {
 }
 
 focus__la() {
-  if command -v exa 2>&1 >/dev/null; then
-    exa "$FOCUS_DATA_DIR" --sort=changed  --reverse \
+  if command -v eza 2>&1 >/dev/null; then
+    eza "$FOCUS_DATA_DIR" --sort=created  --reverse \
       --group-directories-first \
       --long -t=changed --time-style=long-iso \
       --no-user --no-filesize --no-permissions --color=always
@@ -171,6 +177,10 @@ focus__stop() {
 
 focus__dir() {
   cd "$FOCUS_DATA_DIR"
+}
+
+focus__disk_usage() {
+  du -h -d 1 "$FOCUS_DATA_DIR" | sort -r -h
 }
 
 usage() {
@@ -202,7 +212,10 @@ The following commands can be used:
     List all (undone) active focuses.
 
   ls
-    List what I did in the current topic
+    List top 5 most-recent focus.
+
+  la
+    List all focus sorted by most-recently-updated time.
 
   jot [MESSAGE]
     Jot down a quick summary of what has been done.
@@ -210,6 +223,7 @@ The following commands can be used:
 
   dir
     Go to the FOCUS_DATA_DIR
+
   fix
     Fix the last messsage jotted down.
 
@@ -225,13 +239,37 @@ function focus {
   local _focus="$XDG_BIN_HOME/focus"
   if [[ "$1" == "dir" ]]; then
     cd "$( $_focus dir )"
-  elif [[ "$1" == "to" ]]; then
-    cd "$( $_focus dir )/$( $_focus $@)"
+  elif [[ "$1" == "to" ]] ||\
+    [[ "$1" == "today" ]] ||\
+    [[ "$1" == "cd" ]]; then
+    # Declaration and assignment ARE SEPARATED INTENTIONALLY.
+    # Bash's local variable assignment swallowed exit code.
+    local picked
+    picked="$( $_focus $@ )"
+    if [[ "$?" == 0 ]]; then
+      cd "$( $_focus dir )/$picked"
+    fi
   else
     "$_focus" "$@"
   fi
 }
 __FOCUS_EXPORT__
+}
+
+focus__archive() {
+  echo '[ERROR] - This function is not implemented'
+  return 1
+  # if focus is current
+  #   initiate focus__done
+  # if focus is nothing
+  #   do nothing
+  #
+  # Prune the focus with:
+  #   - Remove all unnecessary directories: node_modules, .venv, .terraform.
+  #   - I think the list could be something like gitignore since multiple tools supporting the syntax. Gitignore works with glob. 
+  # Append name with suffix "ARCHIVED.".
+  # Move to FOCUS_DATA_DIR/@archived
+  # Needs to introduce FOCUS_ARCHIVE_DIR
 }
 
 focus__main() {
@@ -260,6 +298,9 @@ focus__main() {
     today)
       focus__today "$@"
       ;;
+    cd)
+      focus__cd "$@"
+      ;;
     done)
       focus__done
       ;;
@@ -282,6 +323,8 @@ focus__main() {
       focus__la;;
     all)
       focus__all;;
+    archive)
+      focus__archive;;
     help)
       usage;;
     version)
@@ -292,6 +335,8 @@ focus__main() {
       echo "$FOCUS_DATA_DIR";;
     export)
       focus__export;;
+    df)
+      focus__disk_usage;;
     *)
       usage
       ;;
